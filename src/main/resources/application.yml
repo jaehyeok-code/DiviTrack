@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: divitrack-finance
+
+  h2:
+    console:
+      enabled: true      # H2 콘솔 활성화
+      path: /h2-console  # 접속 경로 (예: http://localhost:8080/h2-console)
+
+  jpa:
+    properties:
+      hibernate.identifier.generator_strategy: org.hibernate.id.enhanced.SequenceStyleGenerator
+    hibernate:
+      ddl-auto: create   # 개발 중에는 update 또는 create-drop을 사용, 운영 환경에서는 validate 또는 none 권장
+    show-sql: true
+    defer-datasource-initialization: true
+
+  datasource:
+    url: jdbc:h2:mem:divitrack;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: ${H2_DB_USERNAME}
+    password: ${H2_DB_PW}

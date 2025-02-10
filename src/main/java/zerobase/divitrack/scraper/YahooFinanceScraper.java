@@ -58,10 +58,7 @@ public class YahooFinanceScraper implements Scrapper {
                     throw new RuntimeException("unexpected month enum value -> " + split[0]);
                 }
 
-                dividends.add(Dividend.builder()
-                        .date(LocalDateTime.of(year, month, day, 0, 0))
-                        .dividend(dividend)
-                        .build());
+                dividends.add(new Dividend(LocalDateTime.of(year, month, day, 0, 0),dividend));
 
             }
 
@@ -86,10 +83,7 @@ public class YahooFinanceScraper implements Scrapper {
             // 정규표현식에 대해 좀더 깊게 학습할것.
             String title = titleEle.text().replaceAll("\\s*\\(.*?\\)", "");
 
-            return Company.builder()
-                    .ticker(ticker)
-                    .name(title)
-                    .build();
+            return new Company(ticker, title);
 
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,13 +1,10 @@
 package zerobase.divitrack.model;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 @Data
 @AllArgsConstructor

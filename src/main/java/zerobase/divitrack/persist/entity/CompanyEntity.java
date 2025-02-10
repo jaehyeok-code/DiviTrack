@@ -21,7 +21,7 @@ public class CompanyEntity {
 
     private String name;
 
-    public CompanyEntity(Company company){
+    public CompanyEntity(Company company) {
         this.ticker = company.getTicker();
         this.name = company.getName();
     }

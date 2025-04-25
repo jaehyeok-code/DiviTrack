@@ -14,4 +14,8 @@ public class AppConfig {
     public Trie<String, String> trie() {
         return new PatriciaTrie<>();
     }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }

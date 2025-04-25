@@ -30,7 +30,7 @@ public class AuthController {
     }
 
 
-    @PostMapping("/signup")
+    @PostMapping("/signin")
     public ResponseEntity<?> signin(@RequestBody Auth.SignIn request){
         // 로그인용 API
         var member = this.memberService.authenticate(request);

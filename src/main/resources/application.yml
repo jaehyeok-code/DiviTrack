@@ -30,8 +30,8 @@ spring:
       host: localhost
 
 scheduler:
-  scrap:
-    yahoo: "0 0 0 * * *"
+    scrap:
+      yahoo: "0 0 2 * * *"
 
 
 

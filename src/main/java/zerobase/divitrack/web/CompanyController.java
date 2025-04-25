@@ -1,6 +1,7 @@
 package zerobase.divitrack.web;
 
 import lombok.AllArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import zerobase.divitrack.model.Company;
+import zerobase.divitrack.model.constants.CacheKey;
 import zerobase.divitrack.persist.CompanyRepository;
 import zerobase.divitrack.persist.entity.CompanyEntity;
 import zerobase.divitrack.service.CompanyService;
@@ -20,7 +22,7 @@ import java.util.List;
 public class CompanyController {
 
     private final CompanyService companyService;
-    private final CompanyRepository companyRepository;
+    private final CacheManager redisCacheManager;
 
     //회사명검색시 자동완성 API
     @GetMapping("/autocomplete")
@@ -53,8 +55,15 @@ public class CompanyController {
     }
 
     //배당금 데이터 삭제 API
-    @DeleteMapping
-    public ResponseEntity<?> deleteCompany() {
-        return null;
+    @DeleteMapping("/{ticker}")
+    @PreAuthorize("hasRole('WRITE')")
+    public ResponseEntity<?> deleteCompany(@PathVariable String ticker) {
+        String companyName = this.companyService.deleteCompany(ticker);
+        this.clearFinanceCache(companyName);
+        return ResponseEntity.ok(companyName);
+    }
+
+    public void clearFinanceCache(String companyName) {
+        this.redisCacheManager.getCache(CacheKey.KEY_FINANCE).evict(companyName);
     }
 }

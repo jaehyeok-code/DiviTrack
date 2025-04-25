@@ -1,123 +1,59 @@
 package zerobase.divitrack.security;
-///*
-//
-//import lombok.RequiredArgsConstructor;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import org.springframework.security.authentication.AuthenticationManager;
-//import org.springframework.security.authentication.AuthenticationProvider;
-//import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-//import org.springframework.security.authentication.ProviderManager;
-//import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.config.http.SessionCreationPolicy;
-//import org.springframework.security.core.userdetails.User;
-//import org.springframework.security.core.userdetails.UserDetailsService;
-//import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-//import org.springframework.security.crypto.password.PasswordEncoder;
-//import org.springframework.security.web.SecurityFilterChain;
-//import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-//import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
-//
-//import java.util.List;
-//*/
-//
-//@Slf4j
-//@Configuration
-//@EnableWebSecurity
-//@EnableMethodSecurity(prePostEnabled = true)
-//@RequiredArgsConstructor
-//public class SecurityConfiguration {
-//
-//    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-//
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        return http
-//                .httpBasic(httpBasic -> httpBasic.disable())
-//                .csrf(csrf -> csrf.disable())
-//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/**/signup", "/**/signin").permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//                .authenticationProvider(authenticationProvider())
-//                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-//                .build();
-//    }
-//
-//    @Bean
-//    public AuthenticationProvider authenticationProvider() {
-//        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-//        authProvider.setUserDetailsService(userDetailsService());
-//        authProvider.setPasswordEncoder(passwordEncoder());
-//        return authProvider;
-//    }
-//
-//    @Bean
-//    public AuthenticationManager authenticationManager() {
-//        return new ProviderManager(List.of(authenticationProvider()));
-//    }
-//
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
-//
-//    @Bean
-//    public UserDetailsService userDetailsService() {
-//        return new InMemoryUserDetailsManager(
-//                User.withUsername("user")
-//                        .password(passwordEncoder().encode("password"))
-//                        .roles("USER")
-//                        .build()
-//        );
-//    }
-//
-//}
-//
 
-/*
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.RequestMatcher;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 
+@Slf4j
 @Configuration
-public class SecurityConfig {
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
+@RequiredArgsConstructor
+public class SecurityConfiguration {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**").permitAll() // /public 아래 경로는 인증 없이 접근 가능
-                        .requestMatchers("/admin/**").hasRole("ADMIN") // /admin 경로는 ADMIN 권한 필요
-                        .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
-                )
-                .formLogin(login -> login
-                        .loginPage("/login") // 커스텀 로그인 페이지
-                        .defaultSuccessUrl("/") // 로그인 성공 시 이동할 페이지
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout") // 로그아웃 후 이동할 페이지
-                        .permitAll()
-                );
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-        return http.build();
-    }
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        // REST API이므로 기본 폼 로그인을 끄고 CSRF도 비활성화
+        .httpBasic(basic -> basic.disable())
+        .csrf(csrf -> csrf.disable())
+        // 세션을 사용하지 않음
+        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        // 인증/인가 규칙 설정
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/auth/signup", "/auth/signin").permitAll()
+            .anyRequest().authenticated()
+        )
+        // JWT 필터를 UsernamePasswordAuthenticationFilter 전에 삽입
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-    @Bean
-    public HandlerMappingIntrospector mvcHandlerMappingIntrospector() {
-        return new HandlerMappingIntrospector();
-    }
+    return http.build();
+  }
+
+  // H2 콘솔(또는 스태틱 리소스) 무시하기
+  @Bean
+  public WebSecurityCustomizer webSecurityCustomizer() {
+    return web -> web.ignoring()
+        .requestMatchers("/h2-console/**");
+  }
+
+  // AuthenticationManager를 쓰기 위해 빈으로 등록
+  @Bean
+  public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+    return authConfig.getAuthenticationManager();
+  }
 }
 
-*/
+
